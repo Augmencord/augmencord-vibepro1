@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A premium web dashboard to browse, filter, search, and instantly share BigQuery release notes to Twitter/X with auto-formatted draft generators.">
+    <meta name="theme-color" content="#070913">
+    
+    <!-- Title -->
+    <title>BigQuery Release Pulse - Track & Share Google Cloud Updates</title>
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Dashboard Header -->
+        <header>
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2005/svg">
+                        <!-- Custom Cloud + DB icon for BigQuery -->
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z" />
+                        <path d="M9 10h2v2H9v-2zm0 3h2v2H9v-2zm3-3h3v2h-3v-2zm0 3h3v2h-3v-2z" opacity="0.8" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>BigQuery Release Pulse</h1>
+                    <p>Developer Insights Hub</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="last-update-text" id="last-updated">
+                    Last updated: <span>Checking...</span>
+                </div>
+                <button class="btn-refresh" id="refresh-btn" aria-label="Refresh Release Notes">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2005/svg">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <main class="main-layout">
+            <!-- Sidebar Panel: Search & Filters -->
+            <section class="sidebar">
+                <!-- Search Panel -->
+                <div class="panel">
+                    <h2 class="panel-title">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="vertical-align: middle;">
+                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                        </svg>
+                        Search updates
+                    </h2>
+                    <div class="search-container">
+                        <input type="text" id="search-input" class="search-input" placeholder="Search keywords..." aria-label="Search release notes">
+                        <svg class="search-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2005/svg">
+                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Category Filters Panel -->
+                <div class="panel">
+                    <h2 class="panel-title">Filter by Type</h2>
+                    <nav class="filter-list" aria-label="Category Filters">
+                        <button class="filter-btn active" id="filter-all">
+                            <span class="filter-label"><span class="filter-dot all"></span>All Updates</span>
+                            <span class="filter-count">0</span>
+                        </button>
+                        <button class="filter-btn" id="filter-feature">
+                            <span class="filter-label"><span class="filter-dot feature"></span>Features</span>
+                            <span class="filter-count">0</span>
+                        </button>
+                        <button class="filter-btn" id="filter-change">
+                            <span class="filter-label"><span class="filter-dot change"></span>Changes</span>
+                            <span class="filter-count">0</span>
+                        </button>
+                        <button class="filter-btn" id="filter-deprecation">
+                            <span class="filter-label"><span class="filter-dot deprecation"></span>Deprecations</span>
+                            <span class="filter-count">0</span>
+                        </button>
+                        <button class="filter-btn" id="filter-issue">
+                            <span class="filter-label"><span class="filter-dot issue"></span>Issues</span>
+                            <span class="filter-count">0</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Dashboard Statistics Panel -->
+                <div class="panel">
+                    <h2 class="panel-title">Metrics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-label">Total Notes</span>
+                            <span class="stat-value" id="stat-total">--</span>
+                        </div>
+                        <div class="stat-card features">
+                            <span class="stat-label">Features</span>
+                            <span class="stat-value" id="stat-features">--</span>
+                        </div>
+                        <div class="stat-card" style="grid-column: span 2;">
+                            <span class="stat-label">Issues & Deprecations</span>
+                            <span class="stat-value" id="stat-issues" style="color: var(--badge-deprecation);">--</span>
+                        </div>
+                        <div class="stat-card" style="grid-column: span 2;">
+                            <span class="stat-label">Latest Release</span>
+                            <span class="stat-value" id="stat-latest-date" style="font-size: 1.15rem; font-weight: 600; padding: 0.25rem 0;">--</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Feed Panel -->
+            <section class="feed-container">
+                <div class="feed-header">
+                    <div class="feed-title">
+                        <h2>Release Notes Timeline</h2>
+                        <span class="feed-count-badge" id="feed-count">0 updates found</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <label for="sort-select" style="font-size: 0.85rem; color: var(--text-secondary);">Sort:</label>
+                        <select id="sort-select" class="sort-select">
+                            <option value="newest" selected>Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Release Cards List -->
+                <div id="feed-content" class="feed-content">
+                    <!-- Cards will be dynamically injected here via JS -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Tweet Composer Modal Overlay -->
+    <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">
+                    <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Draft X / Twitter Update
+                </h3>
+                <button class="btn-close-modal" id="close-modal" aria-label="Close modal">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="modal-body">
+                <!-- X Style Mock Post Compose Box -->
+                <div class="tweet-compose-box">
+                    <div class="tweet-avatar">BQ</div>
+                    <div class="tweet-main">
+                        <textarea id="tweet-textarea" class="tweet-textarea" placeholder="What's happening?"></textarea>
+                        
+                        <!-- Compose Footer (Char Counter & Ring) -->
+                        <div class="compose-footer">
+                            <div class="char-counter">
+                                <div class="char-ring-container">
+                                    <svg width="24" height="24">
+                                        <circle class="char-ring-bg" cx="12" cy="12" r="10" />
+                                        <circle class="char-ring-progress" id="char-ring-progress" cx="12" cy="12" r="10" />
+                                    </svg>
+                                </div>
+                                <span class="char-num" id="char-num">280</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Composer Custom Options -->
+                <div class="composer-options">
+                    <div class="option-row">
+                        <div class="option-info">
+                            <span class="option-title">Include Release Link</span>
+                            <span class="option-desc">Appends the specific Google Cloud anchor URL</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="include-link-switch" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="option-row" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 0.75rem; margin-top: 0.25rem;">
+                        <div class="option-info">
+                            <span class="option-title">Include Cloud Hashtags</span>
+                            <span class="option-desc">Appends #BigQuery #GoogleCloud to the post</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="add-hashtags-switch" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Actions -->
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancel-modal">Cancel</button>
+                <button class="btn-copy-action" id="copy-tweet-btn">
+                    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    Copy Draft
+                </button>
+                <button class="btn-primary" id="post-tweet-btn">
+                    <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Post on X
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Deferred main scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
